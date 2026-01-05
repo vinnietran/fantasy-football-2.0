@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Admin Teams | Playoff Fantasy Tracker</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Space+Grotesk:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body data-admin="true">
+  <div class="bg-shape shape-one" aria-hidden="true"></div>
+  <div class="bg-shape shape-two" aria-hidden="true"></div>
+
+  <header class="site-header">
+    <div class="brand">
+      <span class="brand-mark">Playoff</span>
+      <span class="brand-sub">Fantasy Tracker</span>
+    </div>
+    <nav class="nav">
+      <a href="index.html">Leaderboard</a>
+    </nav>
+  </header>
+
+  <main>
+    <section class="panel reveal">
+      <div class="section-head">
+        <h1>Admin: Build Teams</h1>
+        <p>Create teams and assign players to every roster slot.</p>
+      </div>
+      <div class="split">
+        <form id="teamForm" class="card">
+          <label>
+            Team Name
+            <input type="text" id="teamName" name="teamName" placeholder="e.g. Saturday Grinders" required>
+          </label>
+          <div class="roster-section">
+            <div class="roster-head">
+              <span>Roster</span>
+              <span class="roster-note">Fill every slot.</span>
+            </div>
+            <div id="rosterFields" class="roster-grid"></div>
+          </div>
+          <button type="submit" class="primary">Create Team</button>
+          <p id="teamStatus" class="status" role="status" aria-live="polite"></p>
+        </form>
+        <div class="card">
+          <h3>Current Teams</h3>
+          <div id="teamList" class="team-list"></div>
+          <p id="teamEmpty" class="empty-state">No teams created yet.</p>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div id="configBanner" class="config-banner" hidden>
+      Update the Firebase config in `app.js` before using the tracker.
+    </div>
+    <p class="footer-credit">Created by V&S Ventures LLC.</p>
+  </footer>
+
+  <script type="module" src="app.js"></script>
+</body>
+</html>

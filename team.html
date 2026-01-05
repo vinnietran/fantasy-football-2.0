@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Team Details | Playoff Fantasy Tracker</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Space+Grotesk:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="bg-shape shape-one" aria-hidden="true"></div>
+  <div class="bg-shape shape-two" aria-hidden="true"></div>
+
+  <header class="site-header">
+    <div class="brand">
+      <span class="brand-mark">Playoff</span>
+      <span class="brand-sub">Fantasy Tracker</span>
+    </div>
+    <nav class="nav">
+      <a href="index.html">Leaderboard</a>
+    </nav>
+  </header>
+
+  <main>
+    <section class="panel reveal">
+      <div class="section-head">
+        <h1 id="teamName">Team Details</h1>
+        <p id="teamMeta" class="team-meta"></p>
+      </div>
+      <div class="split">
+        <div class="card">
+          <h3>Roster</h3>
+          <ul id="teamRoster" class="roster-list"></ul>
+        </div>
+        <div class="card">
+          <h3>Round Totals</h3>
+          <ul id="teamRoundTotals" class="player-list"></ul>
+          <p id="teamTotal" class="team-meta"></p>
+        </div>
+      </div>
+      <p id="teamError" class="empty-state"></p>
+    </section>
+
+    <section class="panel reveal">
+      <div class="section-head">
+        <h2>Round Breakdown</h2>
+        <p>Player scores by round.</p>
+      </div>
+      <div class="card table-card">
+        <div class="table-wrap">
+          <table id="roundBreakdownTable" class="score-table">
+            <thead></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <p class="footer-credit">Created by V&S Ventures LLC.</p>
+  </footer>
+
+  <script type="module" src="team.js"></script>
+</body>
+</html>
