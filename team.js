@@ -5,6 +5,12 @@ import {
   collection,
   onSnapshot
 } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-firestore.js";
+import {
+  formatScore,
+  formatScoreFromCents,
+  normalizeScore,
+  toScoreCents
+} from "./score-utils.mjs";
 
 const firebaseConfig = {
   apiKey: "AIzaSyDpe_O9jCT8OWuGTV5ZwmKtKxpy1q6WWmM",
@@ -84,20 +90,6 @@ function normalizeName(value) {
   return String(value || "").trim().toLowerCase();
 }
 
-function normalizeNumber(value) {
-  const parsed = Number(value);
-  return Number.isFinite(parsed) ? parsed : 0;
-}
-
-function roundScore(value) {
-  return Math.round(value * 10) / 10;
-}
-
-function formatScore(value) {
-  const rounded = roundScore(value);
-  return Number.isInteger(rounded) ? String(rounded) : rounded.toFixed(1);
-}
-
 function getTeamRoster(target) {
   if (Array.isArray(target?.roster) && target.roster.length) {
     return target.roster;
@@ -117,22 +109,25 @@ function getRoundScoreMap(roundKey) {
     if (!key) {
       return;
     }
-    map.set(key, normalizeNumber(entry.score));
+    map.set(key, normalizeScore(entry.score));
   });
   return map;
 }
 
-function getRoundTotal(target, roundKey) {
+function getRoundTotalCents(target, roundKey) {
   const scoreMap = getRoundScoreMap(roundKey);
   const roster = getTeamRoster(target);
-  return roster.reduce(
-    (sum, entry) => sum + normalizeNumber(scoreMap.get(normalizeName(entry.player))),
-    0
-  );
+  return roster.reduce((sum, entry) => {
+    const score = scoreMap.get(normalizeName(entry.player));
+    return sum + toScoreCents(score);
+  }, 0);
 }
 
-function getTeamTotal(target) {
-  return rounds.reduce((sum, round) => sum + getRoundTotal(target, round.key), 0);
+function getTeamTotalCents(target) {
+  return rounds.reduce(
+    (sum, round) => sum + getRoundTotalCents(target, round.key),
+    0
+  );
 }
 
 function renderError(message) {
@@ -155,10 +150,14 @@ function renderRoundTotals() {
   teamRoundTotals.innerHTML = "";
   rounds.forEach((round) => {
     const item = document.createElement("li");
-    item.textContent = `${round.label}: ${formatScore(getRoundTotal(team, round.key))}`;
+    item.textContent = `${round.label}: ${formatScoreFromCents(
+      getRoundTotalCents(team, round.key)
+    )}`;
     teamRoundTotals.appendChild(item);
   });
-  teamTotal.textContent = `Total: ${formatScore(getTeamTotal(team))}`;
+  teamTotal.textContent = `Total: ${formatScoreFromCents(
+    getTeamTotalCents(team)
+  )}`;
 }
 
 function renderScoreTable() {
@@ -206,7 +205,7 @@ function renderScoreTable() {
 
     rounds.forEach((round) => {
       const scoreMap = roundScoreMaps[round.key];
-      const scoreValue = normalizeNumber(
+      const scoreValue = normalizeScore(
         scoreMap.get(normalizeName(entry.player))
       );
       const cell = document.createElement("td");
@@ -237,7 +236,9 @@ function render() {
   }
   renderError("");
   teamName.textContent = team.name;
-  teamMeta.textContent = `Overall total: ${formatScore(getTeamTotal(team))}`;
+  teamMeta.textContent = `Overall total: ${formatScoreFromCents(
+    getTeamTotalCents(team)
+  )}`;
   renderRoster();
   renderRoundTotals();
   renderScoreTable();
