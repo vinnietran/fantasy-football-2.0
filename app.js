@@ -8,6 +8,12 @@ import {
   onSnapshot,
   serverTimestamp
 } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-firestore.js";
+import {
+  formatScore,
+  formatScoreFromCents,
+  normalizeScore,
+  toScoreCents
+} from "./score-utils.mjs";
 
 const firebaseConfig = {
   apiKey: "AIzaSyDpe_O9jCT8OWuGTV5ZwmKtKxpy1q6WWmM",
@@ -190,20 +196,6 @@ function normalizeName(value) {
   return String(value || "").trim().toLowerCase();
 }
 
-function normalizeNumber(value) {
-  const parsed = Number(value);
-  return Number.isFinite(parsed) ? parsed : 0;
-}
-
-function roundScore(value) {
-  return Math.round(value * 10) / 10;
-}
-
-function formatScore(value) {
-  const rounded = roundScore(value);
-  return Number.isInteger(rounded) ? String(rounded) : rounded.toFixed(1);
-}
-
 function getUniquePlayers() {
   const uniquePlayers = [];
   const seen = new Set();
@@ -243,23 +235,25 @@ function getRoundScoreMap(roundKey) {
     if (!key) {
       return;
     }
-    map.set(key, normalizeNumber(entry.score));
+    map.set(key, normalizeScore(entry.score));
   });
   return map;
 }
 
-function getRoundTotal(team, roundKey) {
+function getRoundTotalCents(team, roundKey) {
   const roundScores = getRoundScoreMap(roundKey);
   const roster = getTeamRoster(team);
-  return roster.reduce(
-    (sum, entry) =>
-      sum + normalizeNumber(roundScores.get(normalizeName(entry.player))),
-    0
-  );
+  return roster.reduce((sum, entry) => {
+    const score = roundScores.get(normalizeName(entry.player));
+    return sum + toScoreCents(score);
+  }, 0);
 }
 
-function getTeamTotal(team) {
-  return rounds.reduce((sum, round) => sum + getRoundTotal(team, round.key), 0);
+function getTeamTotalCents(team) {
+  return rounds.reduce(
+    (sum, round) => sum + getRoundTotalCents(team, round.key),
+    0
+  );
 }
 
 function renderLeaderboard() {
@@ -275,13 +269,13 @@ function renderLeaderboard() {
   leaderboardEmpty.hidden = true;
 
   const data = teams.map((team) => {
-    const total = roundScore(getTeamTotal(team));
-    return { id: team.id, name: team.name, total };
+    const totalCents = getTeamTotalCents(team);
+    return { id: team.id, name: team.name, totalCents };
   });
 
   data.sort((a, b) => {
-    if (b.total !== a.total) {
-      return b.total - a.total;
+    if (b.totalCents !== a.totalCents) {
+      return b.totalCents - a.totalCents;
     }
     return a.name.localeCompare(b.name);
   });
@@ -291,9 +285,9 @@ function renderLeaderboard() {
 
   data.forEach((entry, index) => {
     const position = index + 1;
-    if (lastScore === null || entry.total !== lastScore) {
+    if (lastScore === null || entry.totalCents !== lastScore) {
       lastRank = position;
-      lastScore = entry.total;
+      lastScore = entry.totalCents;
     }
 
     const row = document.createElement("a");
@@ -307,7 +301,7 @@ function renderLeaderboard() {
     name.textContent = entry.name;
 
     const total = document.createElement("span");
-    total.textContent = formatScore(entry.total);
+    total.textContent = formatScoreFromCents(entry.totalCents);
 
     row.append(rank, name, total);
     leaderboardList.appendChild(row);
@@ -366,8 +360,8 @@ function renderRoundTotals() {
   const sorted = [...teams].sort((a, b) => a.name.localeCompare(b.name));
   sorted.forEach((team) => {
     const item = document.createElement("li");
-    item.textContent = `${team.name}: ${formatScore(
-      getRoundTotal(team, activeRound)
+    item.textContent = `${team.name}: ${formatScoreFromCents(
+      getRoundTotalCents(team, activeRound)
     )}`;
     roundTotalsList.appendChild(item);
   });
@@ -400,10 +394,10 @@ function renderScoresInputs() {
     const input = document.createElement("input");
     input.className = "score-input";
     input.type = "number";
-    input.step = "0.1";
+    input.step = "0.01";
     input.min = "0";
     input.dataset.player = name;
-    input.value = String(normalizeNumber(scoreMap.get(normalizeName(name))));
+    input.value = formatScore(scoreMap.get(normalizeName(name)));
 
     row.append(player, input);
     scoresList.appendChild(row);
@@ -418,7 +412,7 @@ function renderScoresInputs() {
     scoresList.querySelectorAll("input[data-player]").forEach((input) => {
       entries.push({
         name: input.dataset.player,
-        score: normalizeNumber(input.value)
+        score: normalizeScore(input.value)
       });
     });
     try {
